@@ -63,6 +63,8 @@ my $ipv6_addr_match = qr/[a-fA-F0-9]*:[a-fA-F0-9]*:[a-fA-F0-9:]+/; # simplified 
 my $host_name_match = qr/(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])/;
 my $file_match = qr/[0-9a-zA-Z_@\+\-\.\/]+/;  # note: ubuntu uses '@' in the subvolume layout: <https://help.ubuntu.com/community/btrfs>
 my $glob_match = qr/[0-9a-zA-Z_@\+\-\.\/\*]+/;  # file_match plus '*'
+my $file_match_unsafe = qr/[^\$\&\{\}\<\>\\\|\!\?\`;"'=\s\*]+/;
+my $glob_match_unsafe = qr/[^\$\&\{\}\<\>\\\|\!\?\`;"'=\s]+/;  # file_match plus '*'
 my $uuid_match = qr/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
 my $btrbk_timestamp_match = qr/(?<YYYY>[0-9]{4})(?<MM>[0-9]{2})(?<DD>[0-9]{2})(T(?<hh>[0-9]{2})(?<mm>[0-9]{2})((?<ss>[0-9]{2})(?<zz>(Z|[+-][0-9]{4})))?)?(_(?<NN>[0-9]+))?/;  # matches "YYYYMMDD[Thhmm[ss+0000]][_NN]"
 my $raw_postfix_match_DEPRECATED = qr/--(?<received_uuid>$uuid_match)(\@(?<parent_uuid>$uuid_match))?\.btrfs?(\.(?<compress>($compress_format_alt)))?(\.(?<encrypt>gpg))?(\.(?<split>split))?(\.(?<incomplete>part))?/;  # matches ".btrfs_<received_uuid>[@<parent_uuid>][.gz|bz2|xz][.gpg][.split][.part]"
@@ -5392,6 +5394,7 @@ MAIN:
     'config|c=s'         => \$config_cmdline,
     'override=s'         => \@config_override_cmdline,  # e.g. --override=incremental=no
     'lockfile=s'         => \$lockfile_cmdline,
+    'unsafe-filenames'   => sub { $file_match = $file_match_unsafe; $glob_match = $glob_match_unsafe },
    );
   push @getopt_options, ($program_name eq "lsbtr") ? (
     # "lsbtr" options
