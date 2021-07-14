@@ -33,6 +33,7 @@ use Getopt::Long qw(GetOptions);
 use Time::Local qw( timelocal timegm timegm_nocheck );
 use IPC::Open3 qw(open3);
 use Symbol qw(gensym);
+use Encode qw(decode_utf8);
 
 our $VERSION         = '0.31.3-dev';
 our $AUTHOR          = 'Axel Burri <axel@tty0.ch>';
@@ -5167,7 +5168,8 @@ sub print_formatted(@)
         $hide_column{$key} = 0 if(defined($val));
         $val = $empty_cell_char if(!defined($val) || ($val eq ""));
         $formatted_row{$key} = $val;
-        $maxlen{$key} = length($val) if($maxlen{$key} < length($val));
+        my $vl = length(decode_utf8($val));
+        $maxlen{$key} = $vl if($maxlen{$key} < $vl);
       }
       push @formatted_data, \%formatted_row;
     }
@@ -5218,7 +5220,7 @@ sub print_formatted(@)
       foreach (@visible_keys) {
         my $val = $row->{$_};
         print $fh ' ' x $fill;
-        $fill = $maxlen{$_} - length($val);
+        $fill = $maxlen{$_} - length(decode_utf8($val));
         if($ralign{$_}) {
           print $fh ' ' x $fill;
           $fill = 0;
