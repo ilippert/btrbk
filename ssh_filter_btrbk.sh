@@ -52,13 +52,15 @@ run_cmd()
 reject_filtered_cmd()
 {
     if [[ -n "$restrict_path_list" ]]; then
-	# match any of restrict_path_list with or without trailing slash,
+	# match any of restrict_path_list,
 	# or any file/directory (matching file_match) below restrict_path
 	path_match="(${restrict_path_list})(${file_match})?"
     else
 	# match any absolute file/directory (matching file_match)
 	path_match="${file_match}"
     fi
+    # btrbk >= 0.32.0 quotes files, allow both (legacy)
+    path_match="($path_match|'$path_match')"
 
     if [[ -n "$allow_compress" ]]; then
         decompress_match="(${compress_list}) -d -c( -[pT][0-9]+)?"
@@ -163,9 +165,9 @@ done
 
 # NOTE: subvolume queries are NOT affected by "--restrict-path":
 # btrbk also calls show/list on the mount point of the subvolume
-allow_exact_cmd "${sudo_prefix}btrfs subvolume (show|list)( ${option_match})* ${file_match}";
+allow_exact_cmd "${sudo_prefix}btrfs subvolume (show|list)( ${option_match})* '?${file_match}'?";
 allow_cmd "${sudo_prefix}readlink"                    # resolve symlink
-allow_exact_cmd "${sudo_prefix}test -d ${file_match}" # check directory (only for compat=busybox)
+allow_exact_cmd "${sudo_prefix}test -d '?${file_match}'?" # check directory (only for compat=busybox)
 allow_exact_cmd "cat /proc/self/mountinfo"            # resolve mountpoints
 allow_exact_cmd "cat /proc/self/mounts"               # legacy, for btrbk < 0.27.0
 
